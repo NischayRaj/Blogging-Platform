@@ -1,77 +1,82 @@
-const express = require("express");
-const router = express.Router();
-const BlogPost = require("../models/BlogPost");
+const blogService = require("../services/blogService");
 
-// POST route to create a new blog post
-router.post("/posts", async (req, res) => {
+const createPost = async (req, res) => {
   try {
     const { title, content } = req.body;
-    const newPost = await BlogPost.create({
-      title,
-      content,
-      author: req.user.id, // Assuming user ID is stored in req.user.id after authentication
-    });
-    res.status(201).json(newPost);
+    const authorId = req.user.id;
+
+    const post = await blogService.createPost({ title, content }, authorId);
+
+    res.status(201).json(post);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: error.message });
   }
-});
+};
 
-// PUT route to update an existing blog post by its ID
-router.put("/posts/:id", async (req, res) => {
+const getAllPosts = async (req, res) => {
   try {
-    const { title, content } = req.body;
-    const updatedPost = await BlogPost.findByIdAndUpdate(
-      req.params.id,
-      { title, content },
-      { new: true }
-    );
+    const posts = await blogService.getAllPosts();
+    res.status(200).json(posts);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getPostById = async (req, res) => {
+  try {
+    const post = await blogService.getPostById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+    res.status(200).json(post);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const updatePost = async (req, res) => {
+  try {
+    const updatedPost = await blogService.updatePost(req.params.id, req.body);
     if (!updatedPost) {
       return res.status(404).json({ message: "Post not found" });
     }
-    res.json(updatedPost);
+    res.status(200).json(updatedPost);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: error.message });
   }
-});
+};
 
-// DELETE route to delete a blog post by its ID
-router.delete("/posts/:id", async (req, res) => {
+const deletePost = async (req, res) => {
   try {
-    const deletedPost = await BlogPost.findByIdAndDelete(req.params.id);
+    const deletedPost = await blogService.deletePost(req.params.id);
     if (!deletedPost) {
       return res.status(404).json({ message: "Post not found" });
     }
     res.status(204).end();
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: error.message });
   }
-});
+};
 
-// GET route to retrieve details of a specific blog post by its ID
-router.get("/posts/:id", async (req, res) => {
+const addComment = async (req, res) => {
   try {
-    const post = await BlogPost.findById(req.params.id).populate(
-      "author",
-      "username"
-    );
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
-    res.json(post);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-});
+    const { id } = req.params;
+    const { text } = req.body;
+    const authorId = req.user.id;
 
-// GET route to list all blog posts
-router.get("/posts", async (req, res) => {
-  try {
-    const posts = await BlogPost.find().populate("author", "username");
-    res.json(posts);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-});
+    const updatedPost = await blogService.addComment(id, { text }, authorId);
 
-module.exports = router;
+    res.status(200).json(updatedPost);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = {
+  createPost,
+  getAllPosts,
+  getPostById,
+  updatePost,
+  deletePost,
+  addComment,
+};

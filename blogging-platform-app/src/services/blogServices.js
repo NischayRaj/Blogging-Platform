@@ -1,9 +1,6 @@
 const BlogPost = require("../models/BlogPost");
 
-const blogPostService = {};
-
-// Create a new blog post
-blogPostService.createPost = async (postData, authorId) => {
+const createPost = async (postData, authorId) => {
   try {
     const { title, content } = postData;
     const newPost = await BlogPost.create({
@@ -13,35 +10,29 @@ blogPostService.createPost = async (postData, authorId) => {
     });
     return newPost;
   } catch (error) {
-    throw new Error(error.message);
+    throw error;
   }
 };
 
-// Get all blog posts
-blogPostService.getAllPosts = async () => {
+const getAllPosts = async () => {
   try {
     const posts = await BlogPost.find().populate("author", "username");
     return posts;
   } catch (error) {
-    throw new Error(error.message);
+    throw error;
   }
 };
 
-// Get a single blog post by ID
-blogPostService.getPostById = async (postId) => {
+const getPostById = async (postId) => {
   try {
     const post = await BlogPost.findById(postId).populate("author", "username");
-    if (!post) {
-      throw new Error("Post not found");
-    }
     return post;
   } catch (error) {
-    throw new Error(error.message);
+    throw error;
   }
 };
 
-// Update a blog post by ID
-blogPostService.updatePost = async (postId, postData) => {
+const updatePost = async (postId, postData) => {
   try {
     const { title, content } = postData;
     const updatedPost = await BlogPost.findByIdAndUpdate(
@@ -49,29 +40,22 @@ blogPostService.updatePost = async (postId, postData) => {
       { title, content },
       { new: true }
     );
-    if (!updatedPost) {
-      throw new Error("Post not found");
-    }
     return updatedPost;
   } catch (error) {
-    throw new Error(error.message);
+    throw error;
   }
 };
 
-// Delete a blog post by ID
-blogPostService.deletePost = async (postId) => {
+const deletePost = async (postId) => {
   try {
     const deletedPost = await BlogPost.findByIdAndDelete(postId);
-    if (!deletedPost) {
-      throw new Error("Post not found");
-    }
+    return deletedPost;
   } catch (error) {
-    throw new Error(error.message);
+    throw error;
   }
 };
 
-// Add a comment to a blog post
-blogPostService.addComment = async (postId, commentData, authorId) => {
+const addComment = async (postId, commentData, authorId) => {
   try {
     const { text } = commentData;
     const newComment = {
@@ -83,13 +67,17 @@ blogPostService.addComment = async (postId, commentData, authorId) => {
       { $push: { comments: newComment } },
       { new: true }
     );
-    if (!updatedPost) {
-      throw new Error("Post not found");
-    }
     return updatedPost;
   } catch (error) {
-    throw new Error(error.message);
+    throw error;
   }
 };
 
-module.exports = blogPostService;
+module.exports = {
+  createPost,
+  getAllPosts,
+  getPostById,
+  updatePost,
+  deletePost,
+  addComment,
+};
